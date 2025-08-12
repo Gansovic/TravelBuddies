@@ -24,6 +24,12 @@
       ],
       "@travelbuddies/ui/*": [
         "../../packages/ui/src/*"
+      ],
+      "@travelbuddies/utils": [
+        "../../packages/utils/src"
+      ],
+      "@travelbuddies/utils/*": [
+        "../../packages/utils/src/*"
       ]
     },
     "plugins": [
