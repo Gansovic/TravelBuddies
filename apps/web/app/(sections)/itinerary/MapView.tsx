@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 
 const OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-export default function MapView({ items }: { items: ItineraryItem[] }) {
+function MapInner({ items }: { items: ItineraryItem[] }) {
   const withCoords = items.filter(i => typeof i.lat === 'number' && typeof i.lng === 'number') as Array<ItineraryItem & {lat: number; lng: number}>;
   const center = useMemo(() => {
     if (withCoords.length === 0) return { latitude: 38.7223, longitude: -9.1393, zoom: 10 };
@@ -32,4 +32,12 @@ export default function MapView({ items }: { items: ItineraryItem[] }) {
       ))}
     </Map>
   );
+}
+
+export default function MapView(props: { items: ItineraryItem[] }) {
+  try {
+    return <MapInner {...props} />;
+  } catch (e) {
+    return <div className="text-sm text-red-600">Map failed to load.</div>;
+  }
 }
