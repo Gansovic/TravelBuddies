@@ -1,8 +1,12 @@
+import dynamic from 'next/dynamic';
+
+const ItineraryClient = dynamic(() => import('./ItineraryClient'), { ssr: false });
+
 export default function ItineraryPage() {
   return (
     <div>
-      <h1>Itinerary</h1>
-      <p>Day list and map placeholder.</p>
+      <h1 className="text-2xl font-semibold mb-4">Itinerary</h1>
+      <ItineraryClient />
     </div>
   );
 }
