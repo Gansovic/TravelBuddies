@@ -4,10 +4,10 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
 const items = [
-  { href: "/(sections)/itinerary", label: "Itinerary" },
-  { href: "/(sections)/polls", label: "Polls" },
-  { href: "/(sections)/expenses", label: "Expenses" },
-  { href: "/(sections)/recap", label: "Recap" }
+  { href: "/itinerary", label: "Itinerary" },
+  { href: "/polls", label: "Polls" },
+  { href: "/expenses", label: "Expenses" },
+  { href: "/recap", label: "Recap" }
 ];
 
 export function Sidebar() {
