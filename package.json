@@ -1,0 +1,27 @@
+{
+  "name": "travelbuddies",
+  "private": true,
+  "packageManager": "pnpm@9.6.0",
+  "version": "0.1.0",
+  "description": "TravelBuddies monorepo (web + shared packages)",
+  "scripts": {
+    "dev": "pnpm --filter @travelbuddies/web dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "prettier -w ."
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.2.70",
+    "@types/react-dom": "^18.2.22",
+    "eslint": "^9.9.0",
+    "eslint-config-next": "^15.0.0-canary.95",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}
