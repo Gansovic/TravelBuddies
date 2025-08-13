@@ -1,0 +1,26 @@
+{
+  "name": "principles-hooks",
+  "version": "1.0.0",
+  "description": "Claude hooks for enforcing TravelBuddies engineering principles",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "pre-hook": "tsx src/pre-hook.ts",
+    "post-hook": "tsx src/post-hook.ts",
+    "validate": "tsx src/validate.ts"
+  },
+  "dependencies": {
+    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/typescript-estree": "^6.0.0",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "fast-glob": "^3.3.2",
+    "minimatch": "^10.0.3",
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "tsx": "^4.6.0"
+  },
+  "type": "module"
+}

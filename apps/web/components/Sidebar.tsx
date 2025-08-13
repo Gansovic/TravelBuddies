@@ -10,7 +10,7 @@ const items = [
   { href: "/recap", label: "Recap" }
 ];
 
-export function Sidebar() {
+export function Sidebar({ basePath = '' }: { basePath?: string }) {
   const pathname = usePathname();
   return (
     <aside style={{ width: 220, borderRight: "1px solid #eee", padding: 12 }}>
@@ -20,9 +20,9 @@ export function Sidebar() {
           {items.map((item) => (
             <li key={item.href} style={{ marginBottom: 6 }}>
               <Link
-                href={item.href}
+                href={`${basePath}${item.href}`}
                 className={clsx(
-                  pathname?.startsWith(item.href) && "font-bold"
+                  pathname?.startsWith(`${basePath}${item.href}`) && "font-bold"
                 )}
               >
                 {item.label}

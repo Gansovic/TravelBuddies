@@ -6,6 +6,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import dynamic from 'next/dynamic';
+import { PlaceSearch, type PlaceResult } from './PlaceSearch';
 
 const MapView = dynamic(() => import('./MapView'), { ssr: false });
 
@@ -76,15 +77,23 @@ export default function ItineraryClient() {
 function QuickAdd({ onAdd, day }: { onAdd: (i: ItineraryItem) => void, day: number }) {
   const [type, setType] = useState<ItineraryType>('activity');
   const [title, setTitle] = useState('');
-  const [lat, setLat] = useState<number | undefined>(undefined);
-  const [lng, setLng] = useState<number | undefined>(undefined);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        onAdd({ id: Math.random().toString(36).slice(2), day, type, title, lat, lng });
+        onAdd({
+          id: Math.random().toString(36).slice(2),
+          day,
+          type,
+          title: title || selectedPlace?.name,
+          placeId: selectedPlace?.placeId,
+          lat: selectedPlace?.lat,
+          lng: selectedPlace?.lng,
+        });
         setTitle('');
+        setSelectedPlace(null);
       }}
       className="flex flex-wrap items-end gap-2"
     >
@@ -98,14 +107,16 @@ function QuickAdd({ onAdd, day }: { onAdd: (i: ItineraryItem) => void, day: numb
         <span className="mb-1">Title</span>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Brunch at LX" className="border rounded px-2 py-1 w-64" />
       </label>
-      <label className="flex flex-col text-sm">
-        <span className="mb-1">Lat</span>
-        <input type="number" step="0.000001" value={lat ?? ''} onChange={(e) => setLat(e.target.value ? Number(e.target.value) : undefined)} className="border rounded px-2 py-1 w-32" />
-      </label>
-      <label className="flex flex-col text-sm">
-        <span className="mb-1">Lng</span>
-        <input type="number" step="0.000001" value={lng ?? ''} onChange={(e) => setLng(e.target.value ? Number(e.target.value) : undefined)} className="border rounded px-2 py-1 w-32" />
-      </label>
+      <div className="w-full md:w-auto md:flex-1 min-w-[320px]">
+        <span className="block text-sm mb-1">Search place/address</span>
+        <PlaceSearch
+          type={type}
+          onSelect={(p) => setSelectedPlace(p)}
+        />
+        {selectedPlace && (
+          <div className="text-xs text-gray-600 mt-1">Selected: {selectedPlace.name} — {selectedPlace.address}</div>
+        )}
+      </div>
       <Button type="submit">Add</Button>
     </form>
   );

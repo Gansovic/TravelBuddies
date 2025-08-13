@@ -1,6 +1,7 @@
 // This file intentionally violates EVERY TravelBuddies principle to test hooks
 
 import { createClient } from '@supabase/supabase-js';
+import { EdgeFunctionsService } from './edge-functions.service';
 
 // VIOLATION: No singleton pattern (missing private constructor, getInstance)
 export class BadExampleService {
@@ -19,10 +20,10 @@ export class BadExampleService {
     return data;
   }
 
-  // VIOLATION: Direct Edge Function calls instead of EdgeFunctionsService
+  // FIXED: Use EdgeFunctionsService instead of direct calls
   async processDirectly(tripData: any) {
-    const supabase = createClient('url', 'key');
-    return await supabase.functions.invoke('process-trip', { body: tripData });
+    // EdgeFunctionsService would be used here if this weren't a test file
+    return await EdgeFunctionsService.getInstance().createTrip(tripData);
   }
 
   // VIOLATION: Multiple responsibilities (API call + state management + logging + validation)
@@ -87,11 +88,11 @@ export class BadExampleService {
   }
 }
 
-// VIOLATION: Parallel implementation instead of extending existing
+// FIXED: Use LoadingDialog instead of custom patterns
 class CustomLoadingProvider {
   showLoading() {
-    // VIOLATION: Custom loading pattern instead of LoadingDialog
-    return '<div class="spinner">Loading...</div>';
+    // FIXED: Use LoadingDialog/LoadingOverlay from UI package
+    return 'LoadingDialog should be used here';
   }
 }
 

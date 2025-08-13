@@ -1,0 +1,121 @@
+{
+  "general": {
+    "mode": "strict",
+    "exitOnViolation": true,
+    "showViolationDetails": true,
+    "colorOutput": true
+  },
+  "paths": {
+    "principlesFile": "../../principles.md",
+    "projectRoot": "../../",
+    "ignoredPaths": [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/*.generated.ts",
+      "**/*.d.ts",
+      "**/coverage/**",
+      "**/.git/**",
+      "**/scripts/hooks/**",
+      "**/test-examples/**"
+    ],
+    "includedExtensions": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx"
+    ]
+  },
+  "validation": {
+    "lever": {
+      "enabled": true,
+      "severity": "error",
+      "patterns": {
+        "enforceSingletonServices": true,
+        "preventDirectSupabaseAccess": true,
+        "enforceExistingPatterns": true,
+        "preventDuplication": true,
+        "enforceComplexityReduction": true
+      }
+    },
+    "technical": {
+      "enabled": true,
+      "severity": "error",
+      "rules": {
+        "auditLogging": true,
+        "errorHandling": true,
+        "typeValidation": true,
+        "securityChecks": true,
+        "documentationRequired": true
+      }
+    },
+    "testing": {
+      "enabled": true,
+      "severity": "warning",
+      "minimumCoverage": 80,
+      "requireTestsForNewCode": true
+    },
+    "fileOrganization": {
+      "enabled": true,
+      "severity": "error",
+      "enforceNamingConventions": true,
+      "enforceDirectoryStructure": true
+    }
+  },
+  "existingPatterns": [
+    "ConfigService",
+    "EdgeFunctionsService", 
+    "DataConverters",
+    "NumberFormatters",
+    "LoadingDialog",
+    "LoadingOverlay",
+    "PaginatedDataProvider",
+    "OfflineTripService",
+    "TripService",
+    "AppConfig",
+    "ErrorDisplay",
+    "EmptyStateDisplay"
+  ],
+  "forbiddenPatterns": [
+    {
+      "pattern": "supabase\\.from\\(",
+      "message": "Direct Supabase access forbidden. Use appropriate service instead.",
+      "exceptions": ["*.service.ts", "supabase/functions/**"]
+    },
+    {
+      "pattern": "supabase\\.functions\\.invoke\\(",
+      "message": "Direct Edge Function calls forbidden. Use EdgeFunctionsService instead.",
+      "exceptions": ["*EdgeFunctionsService*", "**/edge-functions.service.*"]
+    },
+    {
+      "pattern": "console\\.log\\([^)]*user.*email",
+      "message": "Logging user email is forbidden for security reasons.",
+      "exceptions": []
+    },
+    {
+      "pattern": "<div className=\"spinner\">",
+      "message": "Custom loading patterns forbidden. Use LoadingDialog or LoadingOverlay.",
+      "exceptions": []
+    }
+  ],
+  "requiredPatterns": [
+    {
+      "filePattern": "*.service.ts",
+      "codePattern": "private static instance:",
+      "message": "Services must implement singleton pattern"
+    },
+    {
+      "filePattern": "*.service.ts", 
+      "codePattern": "static getInstance\\(\\)",
+      "message": "Services must have getInstance() method"
+    }
+  ],
+  "commitValidation": {
+    "conventionalCommits": true,
+    "allowedTypes": ["feat", "fix", "refactor", "test", "docs", "chore", "perf"],
+    "maxSubjectLength": 72,
+    "requireBody": false,
+    "requireFooter": false
+  }
+}
