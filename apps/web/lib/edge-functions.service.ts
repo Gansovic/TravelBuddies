@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * EdgeFunctionsService - Centralized service for Edge Function calls
@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabaseClient';
  */
 export class EdgeFunctionsService {
   private static instance: EdgeFunctionsService;
-  private supabase = createClient();
+  private supabaseClient = supabase;
 
   private constructor() {}
 
@@ -32,7 +32,7 @@ export class EdgeFunctionsService {
       lng?: number;
     };
   }) {
-    const { data, error } = await this.supabase.functions.invoke('trip-create', {
+    const { data, error } = await this.supabaseClient.functions.invoke('trip-create', {
       body: tripData
     });
 
@@ -47,7 +47,7 @@ export class EdgeFunctionsService {
    * Invoke poll-close Edge Function
    */
   async closePoll(pollId: string) {
-    const { data, error } = await this.supabase.functions.invoke('poll-close', {
+    const { data, error } = await this.supabaseClient.functions.invoke('poll-close', {
       body: { poll_id: pollId }
     });
 
