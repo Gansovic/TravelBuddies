@@ -17,10 +17,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // For development: automatically set a default admin user with proper UUID
+    // For development: automatically set our test user who has access to the test trip
     const defaultUser = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      name: 'Admin User'
+      id: 'a0f45e63-a83b-43fa-ac95-60721c0ce39d',
+      name: 'Test User'
     };
     setUser(defaultUser);
     console.log('Set default user:', defaultUser);

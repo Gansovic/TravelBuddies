@@ -7,11 +7,17 @@ const ItineraryClient = dynamic(() => import('app/(sections)/itinerary/Itinerary
   loading: () => <LoadingOverlay message="Loading itinerary..." />,
 });
 
-export default function TripItineraryPage() {
+interface TripItineraryPageProps {
+  params: {
+    tripId: string;
+  };
+}
+
+export default function TripItineraryPage({ params }: TripItineraryPageProps) {
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">Itinerary</h1>
-      <ItineraryClient />
+      <ItineraryClient tripId={params.tripId} />
     </div>
   );
 }

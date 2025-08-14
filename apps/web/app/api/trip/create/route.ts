@@ -78,9 +78,9 @@ export async function POST(req: NextRequest) {
     try {
       const supabase = createClient(supabaseUrl, serviceKey);
       
-      // Use the admin user ID for development (proper UUID format)
-      const ownerId = '550e8400-e29b-41d4-a716-446655440000';
-      console.log('Using admin owner ID:', ownerId);
+      // Use the test user ID for development (matches our database)
+      const ownerId = 'a0f45e63-a83b-43fa-ac95-60721c0ce39d';
+      console.log('Using test user owner ID:', ownerId);
 
       console.log('Inserting trip into database...');
       const { data: trip, error: tripError } = await supabase
@@ -99,19 +99,63 @@ export async function POST(req: NextRequest) {
 
       console.log('Trip inserted successfully:', trip);
 
-      // Try to add trip member record
+      // Try to create trip timeline record (if table exists)
+      console.log('Attempting to create trip timeline...');
+      let timeline = null;
+      try {
+        const { data: timelineData, error: timelineError } = await supabase
+          .from('trip_timeline')
+          .insert({
+            trip_id: trip.id,
+            is_currently_recording: false,
+            total_moments: 0,
+            total_distance_km: 0,
+            cities_visited: [],
+            countries_visited: [],
+            daily_stats: {}
+          })
+          .select('*')
+          .single();
+
+        if (timelineError) {
+          console.warn('Timeline table not available:', timelineError.message);
+        } else {
+          timeline = timelineData;
+          console.log('Trip timeline created successfully:', timeline);
+        }
+      } catch (timelineErr) {
+        console.warn('Timeline creation failed, continuing without it:', timelineErr);
+      }
+
+      // Add trip member record
       console.log('Adding trip member...');
       const { error: memberError } = await supabase
         .from('trip_members')
         .insert({ trip_id: trip.id, user_id: ownerId, role: 'owner' });
       
       if (memberError) {
-        console.warn('Failed to add trip member:', memberError);
-      } else {
-        console.log('Trip member added successfully');
+        console.error('Failed to add trip member:', memberError);
+        // Rollback trip and timeline creation
+        if (timeline) {
+          await supabase.from('trip_timeline').delete().eq('trip_id', trip.id);
+        }
+        await supabase.from('trips').delete().eq('id', trip.id);
+        return NextResponse.json({ 
+          error: 'Failed to add trip member', 
+          details: memberError.message 
+        }, { status: 500 });
       }
 
-      return NextResponse.json({ trip });
+      console.log('Trip member added successfully');
+
+      return NextResponse.json({ 
+        trip: {
+          ...trip,
+          ...(timeline && { timeline }),
+          member_count: 1,
+          is_currently_recording: timeline?.is_currently_recording || false
+        }
+      });
     } catch (dbError) {
       console.error('Database operation error:', dbError);
       return NextResponse.json({ 

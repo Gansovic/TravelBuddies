@@ -1,18 +1,21 @@
+import type { Trip, TripState, TripStats, CreateTripInput, TripMember, TripActivity, InviteTripMemberInput } from '../types/trip';
+import type { Timeline } from '../types/moment';
 /**
- * TripService - Centralized trip data operations service
+ * TripService - Memory recording focused trip operations
  * Following singleton pattern as per engineering principles
  *
- * Handles all trip-related data operations:
- * - Trip CRUD operations (read-only, writes via Edge Functions)
- * - Trip searching and filtering
- * - Trip statistics and analytics
+ * Handles all trip-related data operations for memory recording:
+ * - Trip recording session management
+ * - Real-time collaboration state
+ * - Timeline and statistics
+ * - Member management and invitations
  * - RLS-protected data access
  *
  * @example
  * ```typescript
  * const service = TripService.getInstance();
- * const trips = await service.getUserTrips(userId);
- * const stats = await service.getTripStats(userId);
+ * await service.startRecording("My Trip");
+ * const timeline = await service.getTripTimeline(tripId);
  * ```
  */
 export declare class TripService {
@@ -21,36 +24,48 @@ export declare class TripService {
     private constructor();
     static getInstance(): TripService;
     /**
-     * Get all trips for a user (RLS-protected)
+     * Start a new trip recording session
      */
-    getUserTrips(userId: string): Promise<any[]>;
+    startRecording(input: CreateTripInput): Promise<Trip | null>;
     /**
-     * Get a specific trip by ID (RLS-protected)
+     * Get all trips for a user with memory recording data
      */
-    getTrip(tripId: string): Promise<any | null>;
+    getUserTrips(userId: string): Promise<Trip[]>;
     /**
-     * Search trips by name or destination
+     * Get a specific trip with full recording state
      */
-    searchTrips(userId: string, query: string, limit?: number): Promise<any[]>;
+    getTripState(tripId: string): Promise<TripState | null>;
     /**
-     * Get trip statistics for a user
+     * Get trip timeline with organized moments
      */
-    getTripStats(userId: string): Promise<any>;
+    getTripTimeline(tripId: string): Promise<Timeline | null>;
     /**
-     * Get recent trips for a user
+     * Get memory recording statistics for a user
      */
-    getRecentTrips(userId: string, limit?: number): Promise<any[]>;
+    getTripStats(userId: string): Promise<TripStats>;
     /**
-     * Get trips by date range
+     * Stop recording for a trip
      */
-    getTripsByDateRange(userId: string, startDate: string, endDate: string): Promise<any[]>;
+    stopRecording(tripId: string): Promise<boolean>;
     /**
-     * Check if user has access to trip (via trip members)
+     * Get recent activity for a trip
      */
-    hasAccessToTrip(userId: string, tripId: string): Promise<boolean>;
+    getRecentActivity(tripId: string, limit?: number): Promise<TripActivity[]>;
     /**
-     * Get trip members
+     * Invite a member to join the trip
      */
-    getTripMembers(tripId: string): Promise<any[]>;
+    inviteMember(tripId: string, input: InviteTripMemberInput): Promise<boolean>;
+    /**
+     * Get trip members with contribution stats
+     */
+    getTripMembers(tripId: string): Promise<TripMember[]>;
+    /**
+     * Convert database trip to client Trip type
+     */
+    private convertDatabaseTrip;
+    /**
+     * Convert database moment to client Moment type
+     */
+    private convertDatabaseMoment;
     private getEmptyStats;
 }

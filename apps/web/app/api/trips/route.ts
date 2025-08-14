@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Mark this route as dynamic since it uses request parameters
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -17,29 +20,37 @@ export async function GET(request: NextRequest) {
     
     console.log('Querying trips for user:', userId);
     
-    // First, let's check if there are any trip_members for this user
-    const { data: memberCheck, error: memberError } = await supabase
-      .from('trip_members')
-      .select('trip_id')
-      .eq('user_id', userId);
+    // Use direct PostgREST request (more reliable than Supabase client)
+    const postgreRestUrl = `${supabaseUrl}/rest/v1/trip_members?select=trip_id&user_id=eq.${userId}`;
+    const directResponse = await fetch(postgreRestUrl, {
+      headers: {
+        'apikey': serviceKey,
+        'Authorization': `Bearer ${serviceKey}`
+      }
+    });
     
+    if (!directResponse.ok) {
+      console.error('Error fetching trip members:', await directResponse.text());
+      return NextResponse.json({ error: 'Failed to fetch trip members' }, { status: 500 });
+    }
+    
+    const memberCheck = await directResponse.json();
     console.log('Trip members for user:', memberCheck);
     
-    if (memberError) {
-      console.error('Error checking trip members:', memberError);
+    if (!memberCheck || memberCheck.length === 0) {
+      console.log('No trips found for user');
+      return NextResponse.json({ trips: [] });
     }
 
-    // Get trips where the user is a member
+    // Get the trip IDs
+    const tripIds = memberCheck.map(member => member.trip_id);
+    console.log('Found trip IDs:', tripIds);
+
+    // Get trips by ID (simpler query that should work consistently)
     const { data: trips, error } = await supabase
       .from('trips')
-      .select(`
-        id, 
-        name, 
-        start_date, 
-        end_date,
-        trip_members!inner(user_id)
-      `)
-      .eq('trip_members.user_id', userId)
+      .select('id, name, start_date, end_date')
+      .in('id', tripIds)
       .order('created_at', { ascending: false });
 
     if (error) {

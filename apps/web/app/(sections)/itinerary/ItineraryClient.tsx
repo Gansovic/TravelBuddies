@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@travelbuddies/ui';
 import { ItineraryItem, ItineraryType, reorder } from '@travelbuddies/utils';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -12,19 +12,138 @@ const MapView = dynamic(() => import('./MapView'), { ssr: false });
 
 const types: ItineraryType[] = ['lodging','flight','food','activity','note','transport'];
 
-export default function ItineraryClient() {
+interface ItineraryClientProps {
+  tripId?: string;
+}
+
+export default function ItineraryClient({ tripId = 'temp-trip-id' }: ItineraryClientProps) {
   const [items, setItems] = useState<ItineraryItem[]>([]);
   const [day, setDay] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
   const filtered = useMemo(() => items.filter(i => i.day === day), [items, day]);
 
+  // Fetch itinerary items for this trip
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/trip/${tripId}/itinerary`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch itinerary items');
+      }
+
+      // Convert database items to ItineraryItem format
+      const convertedItems = data.items.map((item: any) => ({
+        id: item.id,
+        day: item.day,
+        type: item.type,
+        title: item.notes || '', // Using notes as title
+        placeId: item.place_id,
+        lat: item.lat,
+        lng: item.lng,
+      }));
+
+      setItems(convertedItems);
+    } catch (err) {
+      console.error('Error fetching itinerary items:', err);
+      setError('Failed to load itinerary items');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add new itinerary item
+  const addItem = async (newItem: Omit<ItineraryItem, 'id'>) => {
+    try {
+      const response = await fetch(`/api/trip/${tripId}/itinerary`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: newItem.type,
+          title: newItem.title,
+          day: newItem.day,
+          placeId: newItem.placeId,
+          lat: newItem.lat,
+          lng: newItem.lng,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create itinerary item');
+      }
+
+      // Add the new item to local state
+      const convertedItem = {
+        id: data.item.id,
+        day: data.item.day,
+        type: data.item.type,
+        title: data.item.notes || '',
+        placeId: data.item.place_id,
+        lat: data.item.lat,
+        lng: data.item.lng,
+      };
+
+      setItems(prev => [...prev, convertedItem]);
+    } catch (err) {
+      console.error('Error creating itinerary item:', err);
+      setError('Failed to add item');
+    }
+  };
+
+  // Delete itinerary item
+  const deleteItem = async (itemId: string) => {
+    try {
+      const response = await fetch(`/api/trip/${tripId}/itinerary?itemId=${itemId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete itinerary item');
+      }
+
+      // Remove the item from local state
+      setItems(prev => prev.filter(item => item.id !== itemId));
+    } catch (err) {
+      console.error('Error deleting itinerary item:', err);
+      setError('Failed to delete item');
+    }
+  };
+
+  useEffect(() => {
+    if (tripId) {
+      fetchItems();
+    }
+  }, [tripId]);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading itinerary...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-600 mb-4">{error}</div>
+        <Button onClick={fetchItems}>Retry</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <section>
         <h2 className="text-xl font-semibold mb-2">Quick Add</h2>
-        <QuickAdd onAdd={(item) => setItems(prev => [...prev, item])} day={day} />
+        <QuickAdd onAdd={addItem} day={day} />
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -58,7 +177,7 @@ export default function ItineraryClient() {
             <SortableContext items={filtered.map(i => i.id)} strategy={verticalListSortingStrategy}>
               <ul className="space-y-2">
                 {filtered.map((i) => (
-                  <SortableItem key={i.id} item={i} />
+                  <SortableItem key={i.id} item={i} onDelete={deleteItem} />
                 ))}
                 {filtered.length === 0 && <li className="text-gray-500">No items for this day.</li>}
               </ul>
@@ -74,7 +193,7 @@ export default function ItineraryClient() {
   );
 }
 
-function QuickAdd({ onAdd, day }: { onAdd: (i: ItineraryItem) => void, day: number }) {
+function QuickAdd({ onAdd, day }: { onAdd: (i: Omit<ItineraryItem, 'id'>) => void, day: number }) {
   const [type, setType] = useState<ItineraryType>('activity');
   const [title, setTitle] = useState('');
   const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
@@ -84,10 +203,9 @@ function QuickAdd({ onAdd, day }: { onAdd: (i: ItineraryItem) => void, day: numb
       onSubmit={(e) => {
         e.preventDefault();
         onAdd({
-          id: Math.random().toString(36).slice(2),
           day,
           type,
-          title: title || selectedPlace?.name,
+          title: title || selectedPlace?.name || '',
           placeId: selectedPlace?.placeId,
           lat: selectedPlace?.lat,
           lng: selectedPlace?.lng,
@@ -122,16 +240,30 @@ function QuickAdd({ onAdd, day }: { onAdd: (i: ItineraryItem) => void, day: numb
   );
 }
 
-function SortableItem({ item }: { item: ItineraryItem }) {
+function SortableItem({ item, onDelete }: { item: ItineraryItem; onDelete: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
   return (
-    <li ref={setNodeRef} style={style} {...attributes} {...listeners} className="border rounded p-2">
-      <div className="text-sm text-gray-500">{item.type}</div>
-      <div className="font-medium">{item.title ?? item.placeId ?? 'Untitled'}</div>
+    <li ref={setNodeRef} style={style} className="border rounded p-2">
+      <div className="flex items-center justify-between">
+        <div {...attributes} {...listeners} className="flex-1 cursor-move">
+          <div className="text-sm text-gray-500">{item.type}</div>
+          <div className="font-medium">{item.title ?? item.placeId ?? 'Untitled'}</div>
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(item.id);
+          }}
+          className="ml-2 px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded border border-red-200"
+          title="Delete item"
+        >
+          ✕
+        </button>
+      </div>
     </li>
   );
 }
