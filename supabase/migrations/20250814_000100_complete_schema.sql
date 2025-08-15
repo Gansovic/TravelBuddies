@@ -36,6 +36,22 @@ CREATE TABLE IF NOT EXISTS trip_members (
 
 ALTER TABLE trip_members DISABLE ROW LEVEL SECURITY;
 
+-- Itinerary items table
+CREATE TABLE IF NOT EXISTS itinerary_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id uuid REFERENCES trips(id) ON DELETE CASCADE,
+  day integer NOT NULL,
+  type text NOT NULL,
+  notes text,
+  place_id text,
+  lat double precision,
+  lng double precision,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE itinerary_items DISABLE ROW LEVEL SECURITY;
+
 -- Memory recording schema
 DO $$ BEGIN
     CREATE TYPE moment_type AS ENUM ('photo', 'video', 'voice', 'text', 'checkin', 'note', 'audio');
@@ -163,6 +179,8 @@ CREATE INDEX IF NOT EXISTS idx_moments_location ON moments(latitude, longitude) 
 CREATE INDEX IF NOT EXISTS idx_moments_type_status ON moments(type, upload_status);
 CREATE INDEX IF NOT EXISTS idx_moments_creator ON moments(creator_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_trip_activity_trip_time ON trip_activity(trip_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_itinerary_items_trip_day ON itinerary_items(trip_id, day);
+CREATE INDEX IF NOT EXISTS idx_itinerary_items_trip_id ON itinerary_items(trip_id);
 
 -- Functions for automatic updates
 CREATE OR REPLACE FUNCTION update_trip_timeline_stats()

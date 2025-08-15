@@ -267,7 +267,7 @@ export class TripService {
         `)
                 .eq('trip_id', tripId)
                 .eq('upload_status', 'ready')
-                .order('captured_at', { ascending: true });
+                .order('captured_at', { ascending: false });
             if (momentsError) {
                 console.error('Error fetching moments:', momentsError);
                 return null;

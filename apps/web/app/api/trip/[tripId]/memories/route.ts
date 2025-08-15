@@ -46,6 +46,8 @@ export async function POST(
     const longitude = formData.get('longitude') ? parseFloat(formData.get('longitude') as string) : undefined;
     const is_private = formData.get('is_private') === 'true';
     const media_file = formData.get('media_file') as File | null;
+    const audio_file = formData.get('audio_file') as File | null;
+    const metadata = formData.get('metadata') ? JSON.parse(formData.get('metadata') as string) : null;
 
     if (!type || !title) {
       return NextResponse.json({ error: 'Type and title are required' }, { status: 400 });
@@ -55,7 +57,9 @@ export async function POST(
     const creator_id = 'a0f45e63-a83b-43fa-ac95-60721c0ce39d';
 
     const momentService = MomentService.getInstance();
-    const moment = await momentService.createMoment({
+    
+    // Create the moment input with review metadata
+    const momentInput = {
       trip_id: tripId,
       creator_id,
       type: type as any,
@@ -66,7 +70,15 @@ export async function POST(
       is_private,
       media_file: media_file || undefined,
       captured_at: new Date()
-    });
+    };
+
+    // If we have review metadata, store it in auto_tags field for now
+    // (In a real app, you'd want a proper reviews table)
+    if (metadata) {
+      (momentInput as any).auto_tags = JSON.stringify(metadata);
+    }
+
+    const moment = await momentService.createMoment(momentInput);
 
     if (moment) {
       return NextResponse.json({ moment });

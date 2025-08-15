@@ -233,12 +233,8 @@ function HomePageContent() {
                           {trip.start_date && (
                             <span>📅 {new Date(trip.start_date).toLocaleDateString()}</span>
                           )}
-                          {trip.timeline && (
-                            <span>📸 {trip.timeline.total_moments} moments</span>
-                          )}
-                          {trip.member_count && trip.member_count > 1 && (
-                            <span>👥 {trip.member_count} people</span>
-                          )}
+                          <span>📸 {trip.timeline?.total_moments || 0} moments</span>
+                          <span>👥 {trip.member_count} people</span>
                         </div>
 
                         {trip.timeline?.cities_visited && trip.timeline.cities_visited.length > 0 && (

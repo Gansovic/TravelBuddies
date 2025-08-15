@@ -173,22 +173,22 @@ export class TripService {
           start_date: trip.start_date ? new Date(trip.start_date) : undefined,
           end_date: trip.end_date ? new Date(trip.end_date) : undefined,
           created_at: new Date(trip.created_at),
-          timeline: timeline ? {
-            id: timeline.id,
+          timeline: {
+            id: timeline?.id || `temp-timeline-${trip.id}`,
             trip_id: trip.id,
-            recording_started_at: timeline.recording_started_at ? 
+            recording_started_at: timeline?.recording_started_at ? 
               new Date(timeline.recording_started_at) : undefined,
-            recording_ended_at: timeline.recording_ended_at ? 
+            recording_ended_at: timeline?.recording_ended_at ? 
               new Date(timeline.recording_ended_at) : undefined,
-            is_currently_recording: timeline.is_currently_recording || false,
-            total_moments: timeline.total_moments || 0,
-            total_distance_km: timeline.total_distance_km || 0,
-            cities_visited: timeline.cities_visited || [],
-            countries_visited: timeline.countries_visited || [],
-            daily_stats: timeline.daily_stats || {},
-            created_at: new Date(timeline.created_at),
-            updated_at: new Date(timeline.updated_at)
-          } : undefined,
+            is_currently_recording: timeline?.is_currently_recording || false,
+            total_moments: timeline?.total_moments || 0,
+            total_distance_km: timeline?.total_distance_km || 0,
+            cities_visited: timeline?.cities_visited || [],
+            countries_visited: timeline?.countries_visited || [],
+            daily_stats: timeline?.daily_stats || {},
+            created_at: timeline ? new Date(timeline.created_at) : new Date(),
+            updated_at: timeline ? new Date(timeline.updated_at) : new Date()
+          },
           member_count: memberCountMap.get(trip.id) || 1,
           is_currently_recording: timeline?.is_currently_recording || false,
           members: [{
@@ -301,7 +301,7 @@ export class TripService {
         `)
         .eq('trip_id', tripId)
         .eq('upload_status', 'ready')
-        .order('captured_at', { ascending: true });
+        .order('captured_at', { ascending: false });
 
       if (momentsError) {
         console.error('Error fetching moments:', momentsError);

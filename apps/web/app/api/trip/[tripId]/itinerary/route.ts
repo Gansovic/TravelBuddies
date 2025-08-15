@@ -79,8 +79,7 @@ export async function POST(
       day,
       place_id: placeId,
       lat,
-      lng,
-      created_by: '550e8400-e29b-41d4-a716-446655440000' // Admin user for now
+      lng
     };
     
     console.log('New item to insert:', newItem);

@@ -5,6 +5,7 @@ export * from "./itinerary";
 export * from "./services/config.service";
 export * from "./services/trip.service";
 export * from "./services/moment.service";
+export * from "./services/poll.service";
 export * from "./services/offline-storage.service";
 export * from "./services/metadata-extraction.service";
 export * from "./services/collaboration.service";

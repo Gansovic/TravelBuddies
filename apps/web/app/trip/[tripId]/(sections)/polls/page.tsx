@@ -1,8 +1,18 @@
-export default function TripPollsPage() {
-  return (
-    <div>
-      <h1>Polls</h1>
-      <p>Create and vote on options.</p>
-    </div>
-  );
+import dynamic from 'next/dynamic';
+import React from 'react';
+import { LoadingOverlay } from '@travelbuddies/ui';
+
+const PollsClient = dynamic(() => import('app/(sections)/polls/PollsClient'), {
+  ssr: false,
+  loading: () => <LoadingOverlay message="Loading polls..." />,
+});
+
+interface TripPollsPageProps {
+  params: {
+    tripId: string;
+  };
+}
+
+export default function TripPollsPage({ params }: TripPollsPageProps) {
+  return <PollsClient tripId={params.tripId} />;
 }

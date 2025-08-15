@@ -1,7 +1,11 @@
 // Generated database types matching the PostgreSQL schema
 
-export type MomentType = 'photo' | 'video' | 'voice' | 'text' | 'checkin';
+export type MomentType = 'photo' | 'video' | 'voice' | 'text' | 'checkin' | 'note' | 'audio';
 export type MomentStatus = 'uploading' | 'processing' | 'ready' | 'failed';
+
+// Poll system types
+export type PollType = 'itinerary_item' | 'general' | 'place_choice';
+export type PollStatus = 'active' | 'closed';
 
 // Database row types (matching SQL schema exactly)
 export interface DatabaseMoment {
@@ -132,5 +136,38 @@ export interface DatabaseUser {
   id: string;
   name: string;
   email?: string;
+  created_at: string;
+}
+
+// Poll system database types
+export interface DatabasePoll {
+  id: string;
+  trip_id: string;
+  creator_id?: string;
+  title: string;
+  description?: string;
+  type: PollType;
+  related_data?: Record<string, any>; // JSON data
+  status: PollStatus;
+  closes_at?: string; // ISO timestamp
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabasePollOption {
+  id: string;
+  poll_id: string;
+  title: string;
+  description?: string;
+  data?: Record<string, any>; // JSON data
+  vote_count: number;
+  created_at: string;
+}
+
+export interface DatabasePollVote {
+  id: string;
+  poll_id: string;
+  option_id: string;
+  user_id?: string;
   created_at: string;
 }

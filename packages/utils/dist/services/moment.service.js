@@ -74,7 +74,8 @@ export class MomentService {
                 location_accuracy_meters: input.location_accuracy_meters,
                 is_private: input.is_private || false,
                 upload_status: 'uploading',
-                creator_id: input.creator_id || (await this.supabase.auth.getUser())?.data?.user?.id
+                creator_id: input.creator_id || (await this.supabase.auth.getUser())?.data?.user?.id,
+                auto_tags: input.auto_tags ? [input.auto_tags] : null
             };
             const { data, error } = await this.supabase
                 .from('moments')
@@ -159,7 +160,7 @@ export class MomentService {
             if (filters?.search_text) {
                 query = query.or(`title.ilike.%${filters.search_text}%,description.ilike.%${filters.search_text}%,transcription.ilike.%${filters.search_text}%`);
             }
-            const { data, error } = await query.order('captured_at', { ascending: true });
+            const { data, error } = await query.order('captured_at', { ascending: false });
             if (error) {
                 console.error('Error fetching moments:', error);
                 return [];
@@ -341,7 +342,7 @@ export class MomentService {
                         highlights
                     }
                 };
-            }).sort((a, b) => a.date.localeCompare(b.date));
+            }).sort((a, b) => b.date.localeCompare(a.date));
             // Calculate total stats
             const allCountries = [...new Set(moments.map(m => m.country).filter(Boolean))];
             const allCities = [...new Set(moments.map(m => m.city).filter(Boolean))];

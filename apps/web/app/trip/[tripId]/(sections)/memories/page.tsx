@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { MomentService } from '@travelbuddies/utils';
 import type { Moment, Timeline, CreateMomentInput, MomentType } from '@travelbuddies/utils';
 import { PlaceSearch, type PlaceResult } from '../../../../(sections)/itinerary/PlaceSearch';
@@ -73,12 +74,20 @@ export default function TripMemoriesPage({ params }: TripMemoriesPageProps) {
           <h1 className="text-2xl font-semibold">Memories</h1>
           <p className="text-gray-600 mt-1">Capture and relive your travel experiences</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
-        >
-          📷 Add Memory
-        </button>
+        <div className="flex gap-2">
+          <Link 
+            href={`/trip/${params.tripId}/review`}
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 font-medium shadow-md"
+          >
+            ✍️ Write Review
+          </Link>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
+          >
+            📷 Quick Capture
+          </button>
+        </div>
       </div>
 
       {/* Timeline Stats */}
@@ -200,6 +209,33 @@ function MemoryCard({
     });
   };
 
+  // Parse review metadata if available
+  const reviewData = (() => {
+    try {
+      if (Array.isArray(moment.auto_tags) && moment.auto_tags.length > 0) {
+        return typeof moment.auto_tags[0] === 'string' ? JSON.parse(moment.auto_tags[0]) : moment.auto_tags[0];
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const isReview = reviewData?.template;
+  const overallRating = reviewData?.overallRating;
+
+  const getReviewIcon = (template: string) => {
+    const icons: Record<string, string> = {
+      restaurant: '🍽️',
+      accommodation: '🏨',
+      activity: '🎯',
+      transport: '🚗',
+      place: '📍',
+      moment: '✨'
+    };
+    return icons[template] || '📝';
+  };
+
   const handleDeleteMemory = async () => {
     try {
       setDeleting(true);
@@ -262,9 +298,23 @@ function MemoryCard({
               )}
             </div>
             <div className="flex items-center space-x-1 ml-2">
-              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                {moment.type}
-              </span>
+              {isReview ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full flex items-center gap-1">
+                    {getReviewIcon(reviewData.template)} Review
+                  </span>
+                  {overallRating > 0 && (
+                    <div className="flex items-center text-yellow-500">
+                      {'⭐'.repeat(Math.floor(overallRating))}
+                      <span className="text-xs text-gray-600 ml-1">({overallRating})</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                  {moment.type}
+                </span>
+              )}
             </div>
           </div>
         
